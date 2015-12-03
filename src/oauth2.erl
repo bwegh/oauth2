@@ -57,6 +57,7 @@
 %%%_ * Types -----------------------------------------------------------
 %% Opaque authentication record
 -record(a, { client   = undefined    :: undefined | term()
+           , redir_uri= undefined    :: undefined | term()
            , resowner = undefined    :: undefined | term()
            , scope                   :: scope()
            , ttl      = 0            :: non_neg_integer()
@@ -187,6 +188,7 @@ authorize_code_request(User, Client, RedirUri, Scope, Ctx0) ->
                         {ok, {Ctx3, Auth}} ->
                             {ok, { Ctx3
                                  , Auth#a{ client=C
+                                         , redir_uri = RedirUri 
                                          , ttl   =oauth2_config:expiry_time(
                                                                     code_grant)
                                          } }}
