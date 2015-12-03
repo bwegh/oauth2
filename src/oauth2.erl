@@ -201,8 +201,9 @@ authorize_code_request(User, Client, RedirUri, Scope, Ctx0) ->
 %%      - 4.1.2. Authorization Code Grant > Authorization Response, with the
 %%        result of authorize_code_request/6.
 -spec issue_code(auth(), appctx()) -> {ok, {appctx(), response()}}.
-issue_code(#a{client=Client, resowner=Owner, scope=Scope, ttl=TTL}, Ctx0) ->
-    GrantContext = build_context(Client, seconds_since_epoch(TTL), Owner, Scope),
+issue_code(#a{client=Client, resowner=Owner, scope=Scope, ttl=TTL, redir_uri=Uri}, Ctx0) ->
+    GrantContext = build_context(Client, seconds_since_epoch(TTL), Owner, Scope,
+                                Uri),
     AccessCode   = ?TOKEN:generate(GrantContext),
     {ok, Ctx1}   = ?BACKEND:associate_access_code(AccessCode,GrantContext,Ctx0),
     {ok, {Ctx1, oauth2_response:new(<<>>,TTL,Owner,Scope,<<>>,<<>>,AccessCode)}}.
@@ -378,7 +379,12 @@ auth_client(Client, RedirUri, Ctx0) ->
 
 -spec build_context(term(), non_neg_integer(), term(), scope()) -> context().
 build_context(Client, ExpiryTime, ResOwner, Scope) ->
+    build_context(Client, ExpiryTime, ResOwner, Scope, undefined).
+                                                      
+-spec build_context(term(), non_neg_integer(), term(), scope(), term()) -> context().
+build_context(Client, ExpiryTime, ResOwner, Scope, Uri) ->
     [ {<<"client">>,         Client}
+    , {<<"redirect_uri">>,   Uri}
     , {<<"resource_owner">>, ResOwner}
     , {<<"expiry_time">>,    ExpiryTime}
     , {<<"scope">>,          Scope} ].
