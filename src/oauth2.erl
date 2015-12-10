@@ -313,9 +313,13 @@ verify_access_code(AccessCode, Client, RedirUri, Ctx0) ->
                     case get(GrantCtx, <<"redirect_uri">>) of
                         {ok, RedirUri} -> 
                             {ok, {Ctx1, GrantCtx}};
-                        _ -> {error, invalid_grant}
+                        _ -> 
+            ?DEBUG("redirection not found ~p",[RedirUri]),
+                            {error, invalid_grant}
                     end;
-                _  -> {error, invalid_grant}
+                _  -> 
+            ?DEBUG("client not found ~p",[Client]),
+                    {error, invalid_grant}
             end
     end.
 
