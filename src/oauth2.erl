@@ -38,6 +38,7 @@
 -export([verify_access_token/2]).
 -export([verify_access_code/2]).
 -export([verify_access_code/3]).
+-export([verify_access_code/4]).
 -export([refresh_access_token/4]).
 
 -export_type([token/0]).
@@ -262,6 +263,8 @@ issue_token_and_refresh( #a{client=Client, resowner=Owner, scope=Scope, ttl=TTL}
                                    , RefreshToken
                                    , RTTL )}}.
 
+
+
 %% @doc Verifies an access code AccessCode, returning its associated
 %%      context if successful. Otherwise, an OAuth2 error code is returned.
 -spec verify_access_code(token(), appctx()) -> {ok, {appctx(), context()}}
@@ -290,6 +293,27 @@ verify_access_code(AccessCode, Client, Ctx0) ->
             case get(GrantCtx, <<"client">>) of
                 {ok, Client} -> {ok, {Ctx1, GrantCtx}};
                 _            -> {error, invalid_grant}
+            end
+    end.
+
+%% @doc Verifies an access code AccessCode and it's corresponding Identity
+%%      as well as its redirection uri,
+%%      returning its associated context if successful. Otherwise, an OAuth2
+%%      error code is returned.
+-spec verify_access_code(token(), client(), rediruri(), appctx()) ->
+                                {ok, {appctx(), context()}} | {error, error()}.
+verify_access_code(AccessCode, Client, RedirUri, Ctx0) ->
+    case verify_access_code(AccessCode, Ctx0) of
+        {error, _}=E           -> E;
+        {ok, {Ctx1, GrantCtx}} ->
+            case get(GrantCtx, <<"client">>) of
+                {ok, Client} ->
+                    case get(GrantCtx, <<"redirect_uri">>) of
+                        {ok, RedirUri} -> 
+                            {ok, {Ctx1, GrantCtx}};
+                        _ -> {error, invalid_grant}
+                    end;
+                _  -> {error, invalid_grant}
             end
     end.
 
