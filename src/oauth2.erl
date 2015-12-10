@@ -54,6 +54,7 @@
 %%%_* Macros ===========================================================
 -define(BACKEND, (oauth2_config:backend())).
 -define(TOKEN,   (oauth2_config:token_generation())).
+-include("elogger.hrl").
 
 %%%_ * Types -----------------------------------------------------------
 %% Opaque authentication record
@@ -158,7 +159,7 @@ authorize_code_grant(Client, Code, RedirUri, Ctx0) ->
     case auth_client(Client, RedirUri, Ctx0) of
         {error, _}      -> {error, invalid_client};
         {ok, {Ctx1, C}} ->
-            case verify_access_code(Code, C, Ctx1) of
+            case verify_access_code(Code, C, RedirUri, Ctx1) of
                 {error, _}=E           -> E;
                 {ok, {Ctx2, GrantCtx}} ->
                     {ok, Ctx3} = ?BACKEND:revoke_access_code(Code, Ctx2),
@@ -306,6 +307,7 @@ verify_access_code(AccessCode, Client, RedirUri, Ctx0) ->
     case verify_access_code(AccessCode, Ctx0) of
         {error, _}=E           -> E;
         {ok, {Ctx1, GrantCtx}} ->
+            ?DEBUG("the grant is ~p",[GrantCtx]),
             case get(GrantCtx, <<"client">>) of
                 {ok, Client} ->
                     case get(GrantCtx, <<"redirect_uri">>) of
