@@ -155,7 +155,7 @@ authorize_client_credentials(Client, Scope0, Ctx0) ->
 -spec authorize_code_grant(client(), binary(), rediruri(), appctx())
                             -> {ok, {appctx(), auth()}} | {error, error()}.
 authorize_code_grant(Client, Code, RedirUri, Ctx0) ->
-    case auth_client(Client, RedirUri, Ctx0) of
+    case auth_client(Client, no_redir, Ctx0) of
         {error, _}      -> {error, invalid_client};
         {ok, {Ctx1, C}} ->
             case verify_access_code(Code, C, RedirUri, Ctx1) of
