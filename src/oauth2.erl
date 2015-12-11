@@ -54,7 +54,6 @@
 %%%_* Macros ===========================================================
 -define(BACKEND, (oauth2_config:backend())).
 -define(TOKEN,   (oauth2_config:token_generation())).
--include("elogger.hrl").
 
 %%%_ * Types -----------------------------------------------------------
 %% Opaque authentication record
@@ -307,18 +306,15 @@ verify_access_code(AccessCode, Client, RedirUri, Ctx0) ->
     case verify_access_code(AccessCode, Ctx0) of
         {error, _}=E           -> E;
         {ok, {Ctx1, GrantCtx}} ->
-            ?DEBUG("the grant is ~p",[GrantCtx]),
             case get(GrantCtx, <<"client">>) of
                 {ok, Client} ->
                     case get(GrantCtx, <<"redirect_uri">>) of
                         {ok, RedirUri} -> 
                             {ok, {Ctx1, GrantCtx}};
                         _ -> 
-            ?DEBUG("redirection not found ~p",[RedirUri]),
                             {error, invalid_grant}
                     end;
                 _  -> 
-            ?DEBUG("client not found ~p",[Client]),
                     {error, invalid_grant}
             end
     end.
