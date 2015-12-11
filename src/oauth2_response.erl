@@ -52,7 +52,7 @@
 -export_type([response/0]).
 
 %%%_* Macros ===========================================================
--define(TOKEN_TYPE, <<"bearer">>).
+-define(TOKEN_TYPE, <<"Bearer">>).
 
 %%%_ * Types -----------------------------------------------------------
 -record(response, {
