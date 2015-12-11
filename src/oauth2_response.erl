@@ -41,6 +41,8 @@
 -export([expires_in/2]).
 -export([scope/1]).
 -export([scope/2]).
+-export([id_token/1]).
+-export([id_token/2]).
 -export([token_type/1]).
 -export([to_proplist/1]).
 -ifndef(pre17).
@@ -61,6 +63,7 @@
           ,scope                    :: oauth2:scope()
           ,refresh_token            :: oauth2:token()
           ,refresh_token_expires_in :: oauth2:lifetime()
+          ,id_token  = undefined    :: atom() | binary()
           ,token_type = ?TOKEN_TYPE :: binary()
          }).
 
@@ -161,6 +164,11 @@ resource_owner(#response{resource_owner = ResOwner}) ->
 -spec resource_owner(response(), term()) -> response().
 resource_owner(Response, NewResOwner) ->
     Response#response{resource_owner = NewResOwner}.
+
+id_token(#response{id_token = IdToken}) ->
+    {ok, IdToken}.
+id_token(Response, IdToken) ->
+    Response#response{id_token = IdToken, resource_owner = undefined}.
 
 -spec token_type(response()) -> {ok, binary()}.
 token_type(#response{}) ->
