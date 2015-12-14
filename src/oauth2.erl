@@ -179,7 +179,7 @@ authorize_code_grant(Client, Code, RedirUri, Ctx0) ->
 -spec authorize_code_request(user(), client(), rediruri(), scope(), appctx()) ->
                                    {ok, {appctx(), auth()}} | {error, error()}.
 authorize_code_request(User, Client, RedirUri, Scope, Ctx0) ->
-    ?DEBUG("auth code req: ~p, ~p, ~p, ~p, ~p, ~p",[User, Client, RedirUri,
+    ?DEBUG("auth code req: ~p, ~p, ~p, ~p, ~p",[User, Client, RedirUri,
                                                     Scope, Ctx0]),
     case ?BACKEND:get_client_identity(Client, Ctx0) of
         {error, _}      -> {error, unauthorized_client};
