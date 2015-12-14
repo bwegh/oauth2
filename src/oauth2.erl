@@ -54,6 +54,7 @@
 %%%_* Macros ===========================================================
 -define(BACKEND, (oauth2_config:backend())).
 -define(TOKEN,   (oauth2_config:token_generation())).
+-include("elogger.hrl").
 
 %%%_ * Types -----------------------------------------------------------
 %% Opaque authentication record
@@ -178,15 +179,21 @@ authorize_code_grant(Client, Code, RedirUri, Ctx0) ->
 -spec authorize_code_request(user(), client(), rediruri(), scope(), appctx()) ->
                                    {ok, {appctx(), auth()}} | {error, error()}.
 authorize_code_request(User, Client, RedirUri, Scope, Ctx0) ->
+    ?DEBUG("auth code req: ~p, ~p, ~p, ~p, ~p, ~p",[User, Client, RedirUri,
+                                                    Scope, Ctx0]),
     case ?BACKEND:get_client_identity(Client, Ctx0) of
         {error, _}      -> {error, unauthorized_client};
         {ok, {Ctx1, C}} ->
+    ?DEBUG("client id is okay, ~p",[Ctx1]),
+
             case ?BACKEND:verify_redirection_uri(C, RedirUri, Ctx1) of
                 {error, _} -> {error, unauthorized_client};
                 {ok, Ctx2} ->
+    ?DEBUG("redir id is okay ~p",[Ctx2]),
                     case auth_user(User, Scope, Ctx2) of
                         {error, _}=E       -> E;
                         {ok, {Ctx3, Auth}} ->
+    ?DEBUG("user auth  id is okay",[]),
                             {ok, { Ctx3
                                  , Auth#a{ client=C
                                          , redir_uri = RedirUri 
