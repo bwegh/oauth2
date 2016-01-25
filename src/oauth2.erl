@@ -32,6 +32,7 @@
 -export([authorize_client_credentials/3]).
 -export([authorize_code_grant/4]).
 -export([authorize_code_request/5]).
+-export([authorize_code_request/6]).
 -export([issue_code/2]).
 -export([issue_token/2]).
 -export([issue_token_and_refresh/2]).
