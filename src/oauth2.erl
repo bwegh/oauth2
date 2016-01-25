@@ -223,7 +223,7 @@ issue_code(#a{client=Client, resowner=Owner, scope=Scope, ttl=TTL, nonce=Nonce, 
                                 Uri, Nonce),
     AccessCode   = ?TOKEN:generate(GrantContext),
     {ok, Ctx1}   = ?BACKEND:associate_access_code(AccessCode,GrantContext,Ctx0),
-    {ok, {Ctx1, oauth2_response:new(<<>>,TTL,Owner,Scope,<<>>,<<>>,AccessCode)}}.
+    {ok, {Ctx1, oauth2_response:new(<<>>,TTL,Owner,Scope,<<>>,<<>>,<<>>,AccessCode)}}.
 
 %% @doc Issues an access token without refresh token from an authorization.
 %%      Use it to implement the following steps of RFC 6749:
