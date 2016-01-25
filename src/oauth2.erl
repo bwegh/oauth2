@@ -62,6 +62,7 @@
            , redir_uri= undefined    :: undefined | term()
            , resowner = undefined    :: undefined | term()
            , scope                   :: scope()
+           , nonce    = undefined    :: undefined | term()
            , ttl      = 0            :: non_neg_integer()
            }).
 
@@ -179,8 +180,13 @@ authorize_code_grant(Client, Code, RedirUri, Ctx0) ->
 -spec authorize_code_request(user(), client(), rediruri(), scope(), appctx()) ->
                                    {ok, {appctx(), auth()}} | {error, error()}.
 authorize_code_request(User, Client, RedirUri, Scope, Ctx0) ->
-    ?DEBUG("auth code req: ~p, ~p, ~p, ~p, ~p",[User, Client, RedirUri,
-                                                    Scope, Ctx0]),
+    authorize_code_request(User, Client, RedirUri, Scope, undefined, Ctx0).
+
+-spec authorize_code_request(user(), client(), rediruri(), scope(), term(), appctx()) ->
+                                   {ok, {appctx(), auth()}} | {error, error()}.
+authorize_code_request(User, Client, RedirUri, Scope, Nonce, Ctx0) ->
+    ?DEBUG("auth code req: ~p, ~p, ~p, ~p, ~p, ~p",[User, Client, RedirUri,
+                                                    Scope, Nonce, Ctx0]),
     case ?BACKEND:get_client_identity(Client, Ctx0) of
         {error, _}      -> {error, unauthorized_client};
         {ok, {Ctx1, C}} ->
@@ -199,6 +205,7 @@ authorize_code_request(User, Client, RedirUri, Scope, Ctx0) ->
                                          , redir_uri = RedirUri 
                                          , ttl   =oauth2_config:expiry_time(
                                                                     code_grant)
+                                         , nonce = Nonce
                                          } }}
                     end
             end
@@ -209,9 +216,9 @@ authorize_code_request(User, Client, RedirUri, Scope, Ctx0) ->
 %%      - 4.1.2. Authorization Code Grant > Authorization Response, with the
 %%        result of authorize_code_request/6.
 -spec issue_code(auth(), appctx()) -> {ok, {appctx(), response()}}.
-issue_code(#a{client=Client, resowner=Owner, scope=Scope, ttl=TTL, redir_uri=Uri}, Ctx0) ->
+issue_code(#a{client=Client, resowner=Owner, scope=Scope, ttl=TTL, nonce=Nonce, redir_uri=Uri}, Ctx0) ->
     GrantContext = build_context(Client, seconds_since_epoch(TTL), Owner, Scope,
-                                Uri),
+                                Uri, Nonce),
     AccessCode   = ?TOKEN:generate(GrantContext),
     {ok, Ctx1}   = ?BACKEND:associate_access_code(AccessCode,GrantContext,Ctx0),
     {ok, {Ctx1, oauth2_response:new(<<>>,TTL,Owner,Scope,<<>>,<<>>,AccessCode)}}.
@@ -412,15 +419,18 @@ auth_client(Client, RedirUri, Ctx0) ->
 
 -spec build_context(term(), non_neg_integer(), term(), scope()) -> context().
 build_context(Client, ExpiryTime, ResOwner, Scope) ->
-    build_context(Client, ExpiryTime, ResOwner, Scope, undefined).
+    build_context(Client, ExpiryTime, ResOwner, Scope, undefined, undefined).
                                                       
--spec build_context(term(), non_neg_integer(), term(), scope(), term()) -> context().
-build_context(Client, ExpiryTime, ResOwner, Scope, Uri) ->
+
+-spec build_context(term(), non_neg_integer(), term(), scope(), term(), term()) -> context().
+build_context(Client, ExpiryTime, ResOwner, Scope, Uri, Nonce) ->
     [ {<<"client">>,         Client}
     , {<<"redirect_uri">>,   Uri}
     , {<<"resource_owner">>, ResOwner}
     , {<<"expiry_time">>,    ExpiryTime}
-    , {<<"scope">>,          Scope} ].
+    , {<<"scope">>,          Scope}
+    , {<<"nonce">>,          Nonce} ].
+
 
 -spec seconds_since_epoch(integer()) -> non_neg_integer().
 seconds_since_epoch(Diff) ->
