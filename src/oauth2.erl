@@ -167,6 +167,7 @@ authorize_code_grant(Client, Code, RedirUri, Ctx0) ->
                     {ok, {Ctx3, #a{ client  =C
                                   , resowner=get_(GrantCtx,<<"resource_owner">>)
                                   , scope   =get_(GrantCtx, <<"scope">>)
+                                  , nonce   =get_(GrantCtx, <<"nonce">>)
                                   , ttl     =oauth2_config:expiry_time(
                                                       password_credentials)
                                   }}}
@@ -257,7 +258,8 @@ issue_token_and_refresh(#a{client = undefined}, _Ctx)   ->
   {error, invalid_authorization};
 issue_token_and_refresh(#a{resowner = undefined}, _Ctx) ->
   {error, invalid_authorization};
-issue_token_and_refresh( #a{client=Client, resowner=Owner, scope=Scope, ttl=TTL}
+issue_token_and_refresh( #a{client=Client, resowner=Owner, scope=Scope, ttl=TTL,
+                           nonce = Nonce}
                        , Ctx0 ) ->
     RTTL         = oauth2_config:expiry_time(refresh_token),
     AccessCtx    = build_context(Client,seconds_since_epoch(TTL),Owner,Scope),
@@ -275,7 +277,8 @@ issue_token_and_refresh( #a{client=Client, resowner=Owner, scope=Scope, ttl=TTL}
                                    , Owner
                                    , Scope
                                    , RefreshToken
-                                   , RTTL )}}.
+                                   , RTTL
+                                   , Nonce )}}.
 
 
 

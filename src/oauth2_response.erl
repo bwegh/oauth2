@@ -25,8 +25,8 @@
 -export([new/1]).
 -export([new/2]).
 -export([new/4]).
--export([new/6]).
 -export([new/7]).
+-export([new/8]).
 -export([access_token/1]).
 -export([access_token/2]).
 -export([access_code/1]).
@@ -42,6 +42,7 @@
 -export([scope/1]).
 -export([scope/2]).
 -export([id_token/1]).
+-export([nonce/1]).
 -export([id_token/2]).
 -export([token_type/1]).
 -export([to_proplist/1]).
@@ -65,6 +66,7 @@
           ,refresh_token_expires_in :: oauth2:lifetime()
           ,id_token  = undefined    :: atom() | binary()
           ,token_type = ?TOKEN_TYPE :: binary()
+          ,nonce = undefined        :: atom() | binary()
          }).
 
 -type response() :: #response{}.
@@ -90,18 +92,19 @@ new(AccessToken, ExpiresIn, ResOwner, Scope) ->
              , scope          = Scope
              }.
 
--spec new(token(), lifetime(), term(), scope(), token(), lifetime()) -> response().
-new(AccessToken, ExpiresIn, ResOwner, Scope, RefreshToken, RExpiresIn) ->
+-spec new(token(), lifetime(), term(), scope(), token(), lifetime(), term()) -> response().
+new(AccessToken, ExpiresIn, ResOwner, Scope, RefreshToken, RExpiresIn, Nonce) ->
     #response{ access_token             = AccessToken
              , expires_in               = ExpiresIn
              , resource_owner           = ResOwner
              , scope                    = Scope
              , refresh_token            = RefreshToken
              , refresh_token_expires_in = RExpiresIn
+             , nonce = Nonce 
              }.
 
--spec new(_, lifetime(), term(), scope(), _, _, token()) -> response().
-new(_, ExpiresIn, ResOwner, Scope, _, _, AccessCode) ->
+-spec new(_, lifetime(), term(), scope(), _, _, _, token()) -> response().
+new(_, ExpiresIn, ResOwner, Scope, _, _, _, AccessCode) ->
     #response{ access_code    = AccessCode
              , expires_in     = ExpiresIn
              , resource_owner = ResOwner
@@ -169,6 +172,13 @@ id_token(#response{id_token = IdToken}) ->
     {ok, IdToken}.
 id_token(Response, IdToken) ->
     Response#response{id_token = IdToken, resource_owner = undefined}.
+
+nonce(#response{nonce = <<>>}) ->
+    {ok, undefined};
+nonce(#response{nonce = Nonce}) when is_binary(Nonce) ->
+    {ok, Nonce};
+nonce(#response{nonce = _})  ->
+    {ok, undefined}.
 
 -spec token_type(response()) -> {ok, binary()}.
 token_type(#response{}) ->
